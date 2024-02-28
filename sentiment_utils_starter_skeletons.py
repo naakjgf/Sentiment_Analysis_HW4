@@ -1,6 +1,6 @@
 # FIRST: RENAME THIS FILE TO sentiment_utils.py 
 
-# YOUR NAMES HERE:
+# YOUR NAMES HERE: Kaan Tural, Arinjay Singh
 
 
 """
