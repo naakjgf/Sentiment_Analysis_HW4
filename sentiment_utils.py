@@ -89,48 +89,31 @@ def get_prfa(dev_y: list, preds: list, verbose=False) -> tuple:
     
     return precision, recall, f1, accuracy
 
-def create_training_graph(metrics_fun: Callable, train_feats: list, dev_feats: list, kind: str, savepath: str = None, verbose: bool = False) -> None:
+def create_training_graph(train_sizes: list, metrics: list, model: str, savepath: str) -> None:
     """
     Create a graph of the classifier's performance on the dev set as a function of the amount of training data.
     Args:
         metrics_fun: a function that takes in training data and dev data and returns a tuple of metrics
-        train_feats: a list of training data in the format [(feats, label), ...]
-        dev_feats: a list of dev data in the format [(feats, label), ...]
+        train_feats: a list of training data in the format ([feats1, feats2, ...], [label1, label2, ...])
+        dev_feats: a list of dev data in the format ([feats1, feats2, ...], [label1, label2, ...])
         kind: the kind of model being used (will go in the title)
         savepath: the path to save the graph to (if None, the graph will not be saved)
         verbose: whether to print the metrics
     """
-    dev_y = [label for feats, label in dev_feats]
     
-    precision_list, recall_list, f1_list, accuracy_list = [], [], [], []
+    precision_list = [metric[0] for metric in metrics]
+    recall_list = [metric[1] for metric in metrics]
+    f1_list = [metric[2] for metric in metrics]
+    accuracy_list = [metric[3] for metric in metrics]
     
-    # training sizes to use like 10% to 100% of training data
-    train_sizes = np.linspace(0.1, 1.0, 10)
-    
-    for size in train_sizes:
-        num_examples = int(size * len(train_feats))
-        
-        #making a subset of the training data
-        train_subset = train_feats[:num_examples]
-        
-        # Use the provided metrics_fun to evaluate the model on this subset, GPT generated this line
-        precision, recall, f1, accuracy = metrics_fun(train_subset, dev_feats)
-        
-        precision_list.append(precision)
-        recall_list.append(recall)
-        f1_list.append(f1)
-        accuracy_list.append(accuracy)
-        
-        if verbose:
-            print(f"Training with {num_examples} examples: Precision={precision}, Recall={recall}, F1={f1}, Accuracy={accuracy}")
     
     # Plotting the metrics, GPT generated this:
     plt.figure(figsize=(10, 6))
-    plt.plot(train_sizes * len(train_feats), precision_list, label='Precision')
-    plt.plot(train_sizes * len(train_feats), recall_list, label='Recall')
-    plt.plot(train_sizes * len(train_feats), f1_list, label='F1 Score')
-    plt.plot(train_sizes * len(train_feats), accuracy_list, label='Accuracy')
-    plt.title(f'Model Performance as a Function of Training Data Size - {kind}')
+    plt.plot(train_sizes, precision_list, label='Precision')
+    plt.plot(train_sizes, recall_list, label='Recall')
+    plt.plot(train_sizes, f1_list, label='F1 Score')
+    plt.plot(train_sizes, accuracy_list, label='Accuracy')
+    plt.title(f'Model Performance as a Function of Training Data Size - {model}')
     plt.xlabel('Size of Training Data')
     plt.ylabel('Score')
     plt.legend()
