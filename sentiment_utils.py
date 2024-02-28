@@ -93,12 +93,10 @@ def create_training_graph(train_sizes: list, metrics: list, model: str, savepath
     """
     Create a graph of the classifier's performance on the dev set as a function of the amount of training data.
     Args:
-        metrics_fun: a function that takes in training data and dev data and returns a tuple of metrics
-        train_feats: a list of training data in the format ([feats1, feats2, ...], [label1, label2, ...])
-        dev_feats: a list of dev data in the format ([feats1, feats2, ...], [label1, label2, ...])
-        kind: the kind of model being used (will go in the title)
+        train_sizes: list of the proportion of the training data used in the format [0.1, 0.2, ...]
+        metrics: the of the classifier's performance on the dev set in the format [(precision, recall, f1, accuracy), ...]
+        model: the kind of model being used (will go in the title)
         savepath: the path to save the graph to (if None, the graph will not be saved)
-        verbose: whether to print the metrics
     """
     
     precision_list = [metric[0] for metric in metrics]
