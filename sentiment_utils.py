@@ -15,10 +15,12 @@ Add any functions to this file that you think will be useful to you in multiple 
 """
 # fancy data structures
 from collections import defaultdict, Counter
+from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
 # for tokenizing and precision, recall, f_measure, and accuracy functions
 import nltk
 # for plotting
 import matplotlib.pyplot as plt
+import numpy as np
 # so that we can indicate a function in a type hint
 from typing import Callable
 nltk.download('punkt')
@@ -73,8 +75,19 @@ def get_prfa(dev_y: list, preds: list, verbose=False) -> tuple:
     Returns:
         tuple of precision, recall, f1, and accuracy
     """
-    #TODO: implement this function
-    pass
+    #gonna use sklearn for this
+    precision = precision_score(dev_y, preds, average='binary')
+    recall = recall_score(dev_y, preds, average='binary')
+    f1 = f1_score(dev_y, preds, average='binary')
+    accuracy = accuracy_score(dev_y, preds)
+    
+    if verbose:
+        print("precision: " + str(precision))
+        print("recall: " + str(recall))
+        print("f1: " + str(f1))
+        print("Accuracy:" + str(accuracy))
+    
+    return precision, recall, f1, accuracy
 
 def create_training_graph(metrics_fun: Callable, train_feats: list, dev_feats: list, kind: str, savepath: str = None, verbose: bool = False) -> None:
     """
@@ -87,8 +100,44 @@ def create_training_graph(metrics_fun: Callable, train_feats: list, dev_feats: l
         savepath: the path to save the graph to (if None, the graph will not be saved)
         verbose: whether to print the metrics
     """
-    #TODO: implement this function
-    pass
+    dev_y = [label for feats, label in dev_feats]
+    
+    precision_list, recall_list, f1_list, accuracy_list = [], [], [], []
+    
+    # training sizes to use like 10% to 100% of training data
+    train_sizes = np.linspace(0.1, 1.0, 10)
+    
+    for size in train_sizes:
+        num_examples = int(size * len(train_feats))
+        
+        #making a subset of the training data
+        train_subset = train_feats[:num_examples]
+        
+        # Use the provided metrics_fun to evaluate the model on this subset, GPT generated this line
+        precision, recall, f1, accuracy = metrics_fun(train_subset, dev_feats)
+        
+        precision_list.append(precision)
+        recall_list.append(recall)
+        f1_list.append(f1)
+        accuracy_list.append(accuracy)
+        
+        if verbose:
+            print(f"Training with {num_examples} examples: Precision={precision}, Recall={recall}, F1={f1}, Accuracy={accuracy}")
+    
+    # Plotting the metrics, GPT generated this:
+    plt.figure(figsize=(10, 6))
+    plt.plot(train_sizes * len(train_feats), precision_list, label='Precision')
+    plt.plot(train_sizes * len(train_feats), recall_list, label='Recall')
+    plt.plot(train_sizes * len(train_feats), f1_list, label='F1 Score')
+    plt.plot(train_sizes * len(train_feats), accuracy_list, label='Accuracy')
+    plt.title(f'Model Performance as a Function of Training Data Size - {kind}')
+    plt.xlabel('Size of Training Data')
+    plt.ylabel('Score')
+    plt.legend()
+    
+    if savepath:
+        plt.savefig(savepath)
+    plt.show()
 
 
 
@@ -101,8 +150,8 @@ def create_index(all_train_data_X: list) -> list:
         vocab: a list of all the unique words in the training data
     """
     # figure out what our vocab is and what words correspond to what indices
-    #TODO: implement this function
-    pass
+    vocab = set(word for document in all_train_data_X for word in document)
+    return list(vocab)
 
 
 def featurize(vocab: list, data_to_be_featurized_X: list, binary: bool = False, verbose: bool = False) -> list:
@@ -117,5 +166,19 @@ def featurize(vocab: list, data_to_be_featurized_X: list, binary: bool = False, 
         a list of sparse vector representations of the data in the format [[count1, count2, ...], ...]
     """
     # using a Counter is essential to having this not take forever
-    #TODO: implement this function
-    pass
+    vocab_set = set(vocab)  # changing to a set because the comment above implies that this will take a while, so O(1)
+                            # lookup will probable be useful in this case. May run into issues w/ sets not liking duplicates heads up.
+    vectorized_data = []
+
+    for document in data_to_be_featurized_X:
+        document_counter = Counter(document)
+        if binary:
+            document_vector = [1 if word in document_counter else 0 for word in vocab]
+        else:
+            document_vector = [document_counter[word] if word in document_counter else 0 for word in vocab]
+        vectorized_data.append(document_vector)
+        
+        if verbose:
+            print(document_vector)
+    
+    return vectorized_data
